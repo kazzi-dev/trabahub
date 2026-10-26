@@ -18,11 +18,13 @@ Terraform and CI, all on free hosting.
   follow-up a week later; overdue ones are highlighted
 - **Sign in with GitHub or Google** (OAuth 2.0 / OpenID Connect), or try the demo instantly
 - **Job timeline:** every status change and edit is recorded
+- **Organizations with role-based access** for career coaches, schools and bootcamps: invite
+  people by link as *admin*, *coach* or *member*; coaches see each member's pipeline and a
+  read-only copy of their board
 - **Documented REST API** with Swagger UI at `/docs`
 
-Coming next (see [PLAN.md](PLAN.md)): organizations with roles for career coaches, a browser
-extension that saves jobs from any site with AI extraction, resume matching, email digests, and a
-WordPress plugin.
+Coming next (see [PLAN.md](PLAN.md)): a browser extension that saves jobs from any site with AI
+extraction, resume matching, email digests, and a WordPress plugin.
 
 ## Architecture
 
@@ -53,6 +55,18 @@ WordPress plugin.
   the web app trades it for a token. This works in browsers that block third-party cookies.
 - **Data isolation by construction.** Every jobs query is scoped by the signed-in user's ID; tests
   check that one user gets 404 for another user's job on read, update and delete.
+- **One permission model, enforced twice.** Role rules (`can`, `canChangeRole`, `canRemove`) live
+  in the shared package: the API enforces them on every request, and the web app uses the same
+  functions to decide which buttons to show. Non-members get 404 for an organization (it can't be
+  probed); members without the right role get 403. An organization can never lose its last owner.
+
+  | | Owner | Admin | Coach | Member |
+  | --- | :-: | :-: | :-: | :-: |
+  | See members | ✓ | ✓ | ✓ | ✓ |
+  | See members' pipelines and boards | ✓ | ✓ | ✓ | |
+  | Invite people | ✓ | ✓ (not admins) | | |
+  | Change roles, remove people | ✓ | ✓ (not owners) | | |
+  | Delete the organization | ✓ | | | |
 - **Consistent errors.** Every error is an RFC 9457 `application/problem+json` body, with
   field-level messages for validation errors that the form shows next to each field.
 - **Real PostgreSQL everywhere.** Tests and local development run PGlite (PostgreSQL compiled to
@@ -75,6 +89,11 @@ Interactive docs: `/docs` on the API. A few endpoints:
 | `PATCH` | `/v1/jobs/{id}` | Update a job, or move it with `{ status, position }` |
 | `DELETE` | `/v1/jobs/{id}` | Delete a job |
 | `GET` | `/v1/jobs/{id}/events` | A job's timeline |
+| `POST` | `/v1/orgs` | Create an organization (you become owner) |
+| `GET` | `/v1/orgs/{id}/members` | Members, with pipeline counts for coaches and up |
+| `PATCH` | `/v1/orgs/{id}/members/{userId}` | Change a role |
+| `POST` | `/v1/orgs/{id}/invites` | Create a 7-day invite link |
+| `POST` | `/v1/invites/{code}/accept` | Join an organization |
 
 ## Run it locally
 
@@ -100,9 +119,9 @@ See [docs/DEPLOY.md](docs/DEPLOY.md): Terraform in `infra/`, or the step-by-step
 ## Project layout
 
 ```
-apps/api/        Express API: src/{auth,jobs,db}, migrations/, tests/
+apps/api/        Express API: src/{auth,jobs,orgs,db}, migrations/, tests/
 apps/web/        Next.js app: src/app (pages), src/components (board, dialog)
-packages/shared/ Zod schemas and types shared by API and web
+packages/shared/ Zod schemas, types and permission rules shared by API and web
 infra/           Terraform for Neon, Render and Vercel
 .github/         CI workflow
 ```

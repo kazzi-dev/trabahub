@@ -127,3 +127,16 @@ export const apiTokens = pgTable(
   },
   (t) => [uniqueIndex("api_tokens_hash_idx").on(t.tokenHash)],
 );
+
+export const invites = pgTable("invites", {
+  codeHash: text("code_hash").primaryKey(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  role: text("role", { enum: ["admin", "coach", "member"] }).notNull(),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt,
+});

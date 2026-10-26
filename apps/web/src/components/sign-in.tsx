@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
-export function SignIn() {
+/** `stayOnPage`: after signing in, stay here (e.g. to accept an invite) instead of opening the board. */
+export function SignIn({ stayOnPage = false }: { stayOnPage?: boolean }) {
   const router = useRouter();
   const { state, signIn } = useAuth();
   const [providers, setProviders] = useState({ github: false, google: false, demo: true });
@@ -30,7 +31,7 @@ export function SignIn() {
     setError(null);
     try {
       signIn(await api.startDemo());
-      router.push("/board");
+      if (!stayOnPage) router.push("/board");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
       setBusy(false);

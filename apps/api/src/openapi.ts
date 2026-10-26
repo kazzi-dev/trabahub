@@ -4,7 +4,14 @@ import {
   OpenApiGeneratorV31,
 } from "@asteasolutions/zod-to-openapi";
 import {
+  createInviteSchema,
   createJobSchema,
+  createOrganizationSchema,
+  inviteSchema,
+  invitePreviewSchema,
+  memberSchema,
+  organizationSchema,
+  updateMemberSchema,
   exchangeCodeSchema,
   jobEventSchema,
   jobListSchema,
@@ -56,6 +63,25 @@ export function buildOpenApi(serverUrl: string) {
   r.registerPath({ method: "patch", path: "/v1/jobs/{id}", tags: ["Jobs"], summary: "Update a job or move it on the board", description: "Send `{ status, position }` to move a card; moving to `applied` sets `appliedAt` and a follow-up reminder.", security: auth, request: { params: idParams, body: { content: { "application/json": { schema: updateJobSchema } } } }, responses: { 200: json(Job, "Updated"), 400: problem("Validation failed"), 404: problem("Not found") } });
   r.registerPath({ method: "delete", path: "/v1/jobs/{id}", tags: ["Jobs"], summary: "Delete a job", security: auth, request: { params: idParams }, responses: { 204: { description: "Deleted" }, 404: problem("Not found") } });
   r.registerPath({ method: "get", path: "/v1/jobs/{id}/events", tags: ["Jobs"], summary: "A job's timeline", security: auth, request: { params: idParams }, responses: { 200: json(z.array(jobEventSchema), "Newest first"), 404: problem("Not found") } });
+
+  const Org = r.register("Organization", organizationSchema);
+  const orgParams = z.object({ orgId: z.string().uuid() });
+  const memberParams = orgParams.extend({ userId: z.string().uuid() });
+  const forbidden = problem("Your role doesn't allow this");
+  const orgBody = { body: { content: { "application/json": { schema: createOrganizationSchema } } } };
+
+  r.registerPath({ method: "get", path: "/v1/orgs", tags: ["Organizations"], summary: "Organizations you belong to", security: auth, responses: { 200: json(z.array(Org), "With your role in each") } });
+  r.registerPath({ method: "post", path: "/v1/orgs", tags: ["Organizations"], summary: "Create an organization (you become owner)", security: auth, request: orgBody, responses: { 201: json(Org, "Created") } });
+  r.registerPath({ method: "get", path: "/v1/orgs/{orgId}", tags: ["Organizations"], summary: "Get an organization", security: auth, request: { params: orgParams }, responses: { 200: json(Org, "The organization"), 404: problem("Not found or not a member") } });
+  r.registerPath({ method: "patch", path: "/v1/orgs/{orgId}", tags: ["Organizations"], summary: "Rename (owner, admin)", security: auth, request: { params: orgParams, ...orgBody }, responses: { 200: json(Org, "Renamed"), 403: forbidden } });
+  r.registerPath({ method: "delete", path: "/v1/orgs/{orgId}", tags: ["Organizations"], summary: "Delete (owner)", security: auth, request: { params: orgParams }, responses: { 204: { description: "Deleted" }, 403: forbidden } });
+  r.registerPath({ method: "get", path: "/v1/orgs/{orgId}/members", tags: ["Organizations"], summary: "Members; coaches and above also get each member's status counts", security: auth, request: { params: orgParams }, responses: { 200: json(z.array(memberSchema), "Members") } });
+  r.registerPath({ method: "patch", path: "/v1/orgs/{orgId}/members/{userId}", tags: ["Organizations"], summary: "Change a member's role (owner, admin)", security: auth, request: { params: memberParams, body: { content: { "application/json": { schema: updateMemberSchema } } } }, responses: { 200: json(updateMemberSchema.extend({ userId: z.string().uuid() }), "Updated"), 403: forbidden, 409: problem("Would leave the organization without an owner") } });
+  r.registerPath({ method: "delete", path: "/v1/orgs/{orgId}/members/{userId}", tags: ["Organizations"], summary: "Remove a member, or leave (your own userId)", security: auth, request: { params: memberParams }, responses: { 204: { description: "Removed" }, 403: forbidden, 409: problem("Would leave the organization without an owner") } });
+  r.registerPath({ method: "get", path: "/v1/orgs/{orgId}/members/{userId}/jobs", tags: ["Organizations"], summary: "A member's board, read-only (coach, admin, owner)", security: auth, request: { params: memberParams }, responses: { 200: json(jobListSchema, "Their jobs"), 403: forbidden } });
+  r.registerPath({ method: "post", path: "/v1/orgs/{orgId}/invites", tags: ["Organizations"], summary: "Create a 7-day invite link (owner, admin)", security: auth, request: { params: orgParams, body: { content: { "application/json": { schema: createInviteSchema } } } }, responses: { 201: json(inviteSchema, "Invite code"), 403: forbidden } });
+  r.registerPath({ method: "get", path: "/v1/invites/{code}", tags: ["Organizations"], summary: "Preview an invite", security: auth, request: { params: z.object({ code: z.string() }) }, responses: { 200: json(invitePreviewSchema, "Invite"), 404: problem("Invalid or expired") } });
+  r.registerPath({ method: "post", path: "/v1/invites/{code}/accept", tags: ["Organizations"], summary: "Join with an invite", security: auth, request: { params: z.object({ code: z.string() }) }, responses: { 201: json(Org, "Joined"), 200: json(Org, "Already a member"), 404: problem("Invalid or expired") } });
 
   return new OpenApiGeneratorV31(r.definitions).generateDocument({
     openapi: "3.1.0",

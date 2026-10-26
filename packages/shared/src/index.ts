@@ -110,3 +110,63 @@ export const problemSchema = z.object({
   errors: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
 });
 export type Problem = z.infer<typeof problemSchema>;
+
+// --- Organizations and roles (coach mode) ---
+
+export const ROLES = ["owner", "admin", "coach", "member"] as const;
+export const roleSchema = z.enum(ROLES);
+export type Role = z.infer<typeof roleSchema>;
+
+export const ROLE_LABELS: Record<Role, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  coach: "Coach",
+  member: "Member",
+};
+
+export const organizationSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  role: roleSchema, // the caller's role in this organization
+  memberCount: z.number().int(),
+  createdAt: z.string().datetime(),
+});
+export type Organization = z.infer<typeof organizationSchema>;
+
+export const createOrganizationSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(80),
+});
+
+export const memberSchema = z.object({
+  userId: z.string().uuid(),
+  name: z.string().nullable(),
+  email: z.string().nullable(),
+  image: z.string().nullable(),
+  role: roleSchema,
+  joinedAt: z.string().datetime(),
+  statusCounts: z.record(jobStatusSchema, z.number().int()).optional(),
+});
+export type Member = z.infer<typeof memberSchema>;
+
+export const updateMemberSchema = z.object({ role: roleSchema });
+
+export const createInviteSchema = z.object({
+  role: roleSchema.exclude(["owner"]).default("member"),
+});
+
+export const inviteSchema = z.object({
+  code: z.string(),
+  role: roleSchema,
+  expiresAt: z.string().datetime(),
+});
+export type Invite = z.infer<typeof inviteSchema>;
+
+export const invitePreviewSchema = z.object({
+  organizationName: z.string(),
+  role: roleSchema,
+  expiresAt: z.string().datetime(),
+});
+export type InvitePreview = z.infer<typeof invitePreviewSchema>;
+
+export * from "./permissions.js";

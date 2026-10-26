@@ -1,5 +1,10 @@
 import type {
   CreateJobInput,
+  Invite,
+  InvitePreview,
+  Member,
+  Organization,
+  Role,
   Job,
   JobEvent,
   JobList,
@@ -84,4 +89,25 @@ export const api = {
     request<Job>(`/v1/jobs/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
   deleteJob: (id: string) => request<void>(`/v1/jobs/${id}`, { method: "DELETE" }),
   jobEvents: (id: string) => request<JobEvent[]>(`/v1/jobs/${id}/events`),
+
+  listOrgs: () => request<Organization[]>("/v1/orgs"),
+  createOrg: (name: string) =>
+    request<Organization>("/v1/orgs", { method: "POST", body: JSON.stringify({ name }) }),
+  getOrg: (id: string) => request<Organization>(`/v1/orgs/${id}`),
+  deleteOrg: (id: string) => request<void>(`/v1/orgs/${id}`, { method: "DELETE" }),
+  members: (orgId: string) => request<Member[]>(`/v1/orgs/${orgId}/members`),
+  setRole: (orgId: string, userId: string, role: Role) =>
+    request<{ userId: string; role: Role }>(`/v1/orgs/${orgId}/members/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+  removeMember: (orgId: string, userId: string) =>
+    request<void>(`/v1/orgs/${orgId}/members/${userId}`, { method: "DELETE" }),
+  memberJobs: (orgId: string, userId: string) =>
+    request<JobList>(`/v1/orgs/${orgId}/members/${userId}/jobs`),
+  createInvite: (orgId: string, role: Exclude<Role, "owner">) =>
+    request<Invite>(`/v1/orgs/${orgId}/invites`, { method: "POST", body: JSON.stringify({ role }) }),
+  previewInvite: (code: string) => request<InvitePreview>(`/v1/invites/${encodeURIComponent(code)}`),
+  acceptInvite: (code: string) =>
+    request<Organization>(`/v1/invites/${encodeURIComponent(code)}/accept`, { method: "POST" }),
 };

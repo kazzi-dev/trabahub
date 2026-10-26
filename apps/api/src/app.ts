@@ -13,6 +13,7 @@ import type { Db } from "./db/client.js";
 import { errorHandler, notFoundHandler } from "./errors.js";
 import { jobsRouter } from "./jobs/routes.js";
 import { buildOpenApi } from "./openapi.js";
+import { invitesRouter, orgsRouter } from "./orgs/routes.js";
 
 export function createApp(db: Db, config: Config) {
   const app = express();
@@ -46,6 +47,8 @@ export function createApp(db: Db, config: Config) {
 
   app.use("/v1/auth", authRouter(db, config, tokens));
   app.use("/v1/jobs", requireUser(tokens), jobsRouter(db));
+  app.use("/v1/orgs", requireUser(tokens), orgsRouter(db));
+  app.use("/v1/invites", requireUser(tokens), invitesRouter(db));
 
   app.use(notFoundHandler);
   app.use(errorHandler);
