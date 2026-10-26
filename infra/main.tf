@@ -16,6 +16,11 @@ resource "random_password" "jwt_secret" {
   special = false
 }
 
+resource "random_password" "cron_secret" {
+  length  = 40
+  special = false
+}
+
 resource "render_web_service" "api" {
   name              = "${var.app_name}-api"
   plan              = var.render_plan
@@ -46,6 +51,8 @@ resource "render_web_service" "api" {
     GITHUB_CLIENT_SECRET = { value = var.github_oauth_client_secret }
     GOOGLE_CLIENT_ID     = { value = var.google_oauth_client_id }
     GOOGLE_CLIENT_SECRET = { value = var.google_oauth_client_secret }
+    CRON_SECRET          = { value = random_password.cron_secret.result }
+    RESEND_API_KEY       = { value = var.resend_api_key }
   }
 }
 

@@ -1,11 +1,11 @@
-import { exchangeCodeSchema, type TokenResponse } from "@trabahub/shared";
+import { exchangeCodeSchema, updateMeSchema, type TokenResponse } from "@trabahub/shared";
 import { decodeIdToken, generateCodeVerifier, generateState, GitHub, Google } from "arctic";
 import { eq } from "drizzle-orm";
 import { Router, type Response } from "express";
 
 import type { Config } from "../config.js";
 import type { Db } from "../db/client.js";
-import { authCodes } from "../db/schema.js";
+import { authCodes, users } from "../db/schema.js";
 import { HttpError } from "../errors.js";
 import { createDemoUser, findUser, toUser, upsertOAuthUser, type OAuthProfile } from "../users.js";
 import { requireUser } from "./middleware.js";
@@ -121,6 +121,13 @@ export function authRouter(db: Db, config: Config, tokens: TokenService): Router
 
   router.get("/me", requireUser(tokens), async (_req, res) => {
     const user = await findUser(db, res.locals.userId);
+    if (!user) throw new HttpError(401, "Unauthorized", "Account no longer exists");
+    res.json(toUser(user));
+  });
+
+  router.patch("/me", requireUser(tokens), async (req, res) => {
+    const { emailDigest } = updateMeSchema.parse(req.body);
+    const [user] = await db.update(users).set({ emailDigest }).where(eq(users.id, res.locals.userId)).returning();
     if (!user) throw new HttpError(401, "Unauthorized", "Account no longer exists");
     res.json(toUser(user));
   });

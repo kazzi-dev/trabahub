@@ -15,7 +15,8 @@ Terraform and CI, all on free hosting.
 - **Kanban board** with drag and drop (mouse, touch and keyboard) and a swipeable column layout
   on phones
 - **Follow-ups that don't slip:** moving a job to *Applied* stamps the date and schedules a
-  follow-up a week later; overdue ones are highlighted
+  follow-up a week later; overdue ones are highlighted, and a **daily email digest** (Resend,
+  triggered by a GitHub Actions schedule) lists what's due. Users can turn it off in Settings.
 - **Sign in with GitHub or Google** (OAuth 2.0 / OpenID Connect), or try the demo instantly
 - **Job timeline:** every status change and edit is recorded
 - **Organizations with role-based access** for career coaches, schools and bootcamps: invite
@@ -24,7 +25,7 @@ Terraform and CI, all on free hosting.
 - **Documented REST API** with Swagger UI at `/docs`
 
 Coming next (see [PLAN.md](PLAN.md)): a browser extension that saves jobs from any site with AI
-extraction, resume matching, email digests, and a WordPress plugin.
+extraction, resume matching, and a WordPress plugin.
 
 ## Architecture
 
@@ -34,6 +35,7 @@ extraction, resume matching, email digests, and a WordPress plugin.
                                        GitHub / Google OAuth (one-time code handoff)
  Terraform (infra/) ──► Neon project, Render service + env, Vercel project + env
  GitHub Actions ──► typecheck · test · build · Docker smoke test · terraform validate
+ GitHub Actions schedule (daily) ──► POST /v1/internal/reminders ──► Resend email
 ```
 
 | Layer | Tech |

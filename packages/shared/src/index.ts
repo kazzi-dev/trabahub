@@ -89,8 +89,11 @@ export const userSchema = z.object({
   email: z.string().nullable(),
   image: z.string().nullable(),
   isDemo: z.boolean(),
+  emailDigest: z.boolean(),
 });
 export type User = z.infer<typeof userSchema>;
+
+export const updateMeSchema = z.object({ emailDigest: z.boolean() });
 
 export const tokenResponseSchema = z.object({
   token: z.string(),

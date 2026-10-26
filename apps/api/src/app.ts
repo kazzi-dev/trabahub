@@ -10,12 +10,14 @@ import { authRouter } from "./auth/routes.js";
 import { TokenService } from "./auth/tokens.js";
 import type { Config } from "./config.js";
 import type { Db } from "./db/client.js";
+import { createSender, type EmailSender } from "./email/sender.js";
 import { errorHandler, notFoundHandler } from "./errors.js";
 import { jobsRouter } from "./jobs/routes.js";
 import { buildOpenApi } from "./openapi.js";
 import { invitesRouter, orgsRouter } from "./orgs/routes.js";
+import { internalRouter } from "./reminders/routes.js";
 
-export function createApp(db: Db, config: Config) {
+export function createApp(db: Db, config: Config, sender: EmailSender = createSender(config)) {
   const app = express();
   const tokens = new TokenService(config.JWT_SECRET, config.ACCESS_TOKEN_TTL_SECONDS);
   const allowedOrigins = [new URL(config.WEB_URL).origin, ...config.CORS_ORIGINS];
@@ -49,6 +51,7 @@ export function createApp(db: Db, config: Config) {
   app.use("/v1/jobs", requireUser(tokens), jobsRouter(db));
   app.use("/v1/orgs", requireUser(tokens), orgsRouter(db));
   app.use("/v1/invites", requireUser(tokens), invitesRouter(db));
+  app.use("/v1/internal", internalRouter(db, config, sender));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

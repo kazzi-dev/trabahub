@@ -12,6 +12,7 @@ export const toUser = (u: UserRow): User => ({
   email: u.email,
   image: u.image,
   isDemo: u.isDemo,
+  emailDigest: u.emailDigest,
 });
 
 export async function findUser(db: Db, id: string): Promise<UserRow | undefined> {

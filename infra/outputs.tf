@@ -13,3 +13,9 @@ output "database_url" {
   value       = neon_project.db.connection_uri
   sensitive   = true
 }
+
+output "cron_secret" {
+  description = "Add this as the CRON_SECRET repository secret so the daily reminder job can call the API."
+  value       = random_password.cron_secret.result
+  sensitive   = true
+}

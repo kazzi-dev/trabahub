@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 const NAV = [
   { href: "/board", label: "My board" },
   { href: "/orgs", label: "Organizations" },
+  { href: "/settings", label: "Settings" },
 ];
 
 /** Header + sign-in guard for every signed-in page. */

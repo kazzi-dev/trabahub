@@ -32,6 +32,10 @@ const configSchema = z.object({
     .default("true")
     .transform((v) => v === "true"),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().default(120),
+  // Daily follow-up digest: the scheduler must send this secret; Resend delivers the email.
+  CRON_SECRET: z.string().default(""),
+  RESEND_API_KEY: z.string().default(""),
+  EMAIL_FROM: z.string().default("TrabaHub <onboarding@resend.dev>"),
 });
 
 export type Config = z.infer<typeof configSchema>;

@@ -14,6 +14,8 @@ interface AuthContextValue {
   state: AuthState;
   signIn(response: TokenResponse): void;
   signOut(): void;
+  /** Replace the cached user after a profile change. */
+  setUser(user: User): void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -52,7 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ status: "signed-out" });
   }, []);
 
-  return <AuthContext.Provider value={{ state, signIn, signOut }}>{children}</AuthContext.Provider>;
+  const setUser = useCallback((user: User) => setState({ status: "signed-in", user }), []);
+
+  return <AuthContext.Provider value={{ state, signIn, signOut, setUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

@@ -21,6 +21,8 @@ export const users = pgTable("users", {
   email: text("email"),
   image: text("image"),
   isDemo: boolean("is_demo").notNull().default(false),
+  emailDigest: boolean("email_digest").notNull().default(true),
+  lastDigestAt: timestamp("last_digest_at", { withTimezone: true }),
   createdAt,
 });
 

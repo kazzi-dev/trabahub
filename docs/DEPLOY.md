@@ -53,6 +53,17 @@ Pick **one** route. Don't mix them, or you'll create duplicate resources.
    environment variable `NEXT_PUBLIC_API_URL` = your Render URL → Deploy.
 4. Put the Vercel URL in Render's `WEB_URL` and save (Render redeploys).
 
+## Optional: daily follow-up emails
+
+1. Create a free [Resend](https://resend.com) account and an API key. Without your own domain,
+   Resend's test sender (`onboarding@resend.dev`) only delivers to your own address, which is
+   enough to demo it; verify a domain to email anyone.
+2. On the API (Render), set `RESEND_API_KEY` and `CRON_SECRET` (any long random string; with
+   Terraform it's generated: `terraform output -raw cron_secret`).
+3. In the GitHub repo → Settings → Secrets and variables → Actions, add `API_URL` (your Render URL)
+   and `CRON_SECRET` (the same value). The **Daily follow-up reminders** workflow then runs every
+   day at 8:00 AM Philippine time; you can also run it by hand from the Actions tab.
+
 ## Optional: sign in with GitHub / Google
 
 - **GitHub:** Settings → Developer settings → OAuth Apps → New. Homepage: your Vercel URL.

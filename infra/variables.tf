@@ -88,3 +88,10 @@ variable "google_oauth_client_secret" {
   default     = ""
   sensitive   = true
 }
+
+variable "resend_api_key" {
+  description = "Resend API key for follow-up emails (optional; without it emails are only logged)."
+  type        = string
+  default     = ""
+  sensitive   = true
+}

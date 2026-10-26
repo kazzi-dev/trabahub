@@ -79,6 +79,8 @@ export const api = {
   exchange: (code: string) =>
     request<TokenResponse>("/v1/auth/exchange", { method: "POST", body: JSON.stringify({ code }) }),
   me: () => request<User>("/v1/auth/me"),
+  updateMe: (input: { emailDigest: boolean }) =>
+    request<User>("/v1/auth/me", { method: "PATCH", body: JSON.stringify(input) }),
   signInUrl: (provider: "github" | "google") =>
     `${API_URL}/v1/auth/${provider}/start?redirect=${encodeURIComponent(window.location.origin)}`,
 

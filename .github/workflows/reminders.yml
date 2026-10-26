@@ -1,0 +1,27 @@
+name: Daily follow-up reminders
+
+# Free scheduler: once a day, ask the API to email follow-up digests.
+# Needs repository secrets API_URL (e.g. https://trabahub-api.onrender.com) and CRON_SECRET
+# (the same value as the API's CRON_SECRET). Without them the job skips itself.
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # 00:00 UTC = 8:00 AM Philippine time
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the digest
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "API_URL or CRON_SECRET not set; skipping."
+            exit 0
+          fi
+          # Free hosting sleeps when idle, so wake the API first.
+          for i in $(seq 1 12); do curl -fs "$API_URL/health" > /dev/null && break; sleep 10; done
+          curl -fsS -X POST "$API_URL/v1/internal/reminders" -H "Authorization: Bearer $CRON_SECRET"

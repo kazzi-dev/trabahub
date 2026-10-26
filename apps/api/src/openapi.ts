@@ -20,6 +20,7 @@ import {
   problemSchema,
   tokenResponseSchema,
   updateJobSchema,
+  updateMeSchema,
   userSchema,
 } from "@trabahub/shared";
 import { z } from "zod";
@@ -57,6 +58,8 @@ export function buildOpenApi(serverUrl: string) {
   r.registerPath({ method: "post", path: "/v1/auth/demo", tags: ["Auth"], summary: "Start a sandboxed demo session", responses: { 201: json(tokenResponseSchema, "Demo session") } });
   r.registerPath({ method: "get", path: "/v1/auth/me", tags: ["Auth"], summary: "Current user", security: auth, responses: { 200: json(User, "The signed-in user"), 401: problem("Not signed in") } });
 
+  r.registerPath({ method: "patch", path: "/v1/auth/me", tags: ["Auth"], summary: "Update your preferences (daily follow-up email)", security: auth, request: { body: { content: { "application/json": { schema: updateMeSchema } } } }, responses: { 200: json(User, "Updated user") } });
+  r.registerPath({ method: "post", path: "/v1/internal/reminders", tags: ["System"], summary: "Send today's follow-up digests (called by the daily scheduler)", description: "Requires `Authorization: Bearer <CRON_SECRET>`. Safe to retry: nobody gets two digests within 20 hours.", responses: { 200: json(z.object({ sent: z.number().int(), failed: z.number().int() }), "Digests sent"), 401: problem("Bad scheduler secret") } });
   r.registerPath({ method: "get", path: "/v1/jobs", tags: ["Jobs"], summary: "List your jobs", security: auth, request: { query: listJobsQuerySchema }, responses: { 200: json(jobListSchema, "A page of jobs"), 401: problem("Not signed in") } });
   r.registerPath({ method: "post", path: "/v1/jobs", tags: ["Jobs"], summary: "Create a job", security: auth, request: { body: { content: { "application/json": { schema: createJobSchema } } } }, responses: { 201: json(Job, "Created"), 400: problem("Validation failed"), 401: problem("Not signed in") } });
   r.registerPath({ method: "get", path: "/v1/jobs/{id}", tags: ["Jobs"], summary: "Get a job", security: auth, request: { params: idParams }, responses: { 200: json(Job, "The job"), 404: problem("Not found") } });
