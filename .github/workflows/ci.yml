@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    name: API (typecheck, test, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @trabahub/shared
+      - run: npm run typecheck -w @trabahub/api
+      - run: npm test -w @trabahub/api
+      - run: npm run build -w @trabahub/api
+
+  web:
+    name: Web (lint, typecheck, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @trabahub/shared
+      - run: npm run lint -w @trabahub/web
+      - run: npm run typecheck -w @trabahub/web
+      - run: npm run build -w @trabahub/web
+        env:
+          NEXT_PUBLIC_API_URL: https://example.invalid
+
+  docker:
+    name: API Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build -f apps/api/Dockerfile -t trabahub-api .
+      - name: Smoke test the image
+        run: |
+          docker run -d --name api -p 4000:4000 -e JWT_SECRET=ci-secret-ci-secret-ci-secret-ci-secret -e NODE_ENV=development trabahub-api
+          for i in $(seq 1 20); do curl -fs localhost:4000/health && exit 0; sleep 1; done
+          docker logs api; exit 1
+
+  terraform:
+    name: Terraform (fmt, validate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
+      - run: terraform validate

@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (gitignored) and fill in. Never commit real values.
+render_api_key   = "rnd_..."
+render_owner_id  = "usr_..."
+vercel_api_token = "..."
+neon_api_key     = "..."
+
+# Optional
+# web_domain                 = "https://trabahub.vercel.app"
+# github_oauth_client_id     = ""
+# github_oauth_client_secret = ""

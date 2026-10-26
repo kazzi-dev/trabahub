@@ -1,0 +1,36 @@
+# Full stack locally with a real PostgreSQL:  docker compose up --build
+# (Without Docker: `npm run dev:api` uses PGlite, PostgreSQL compiled to WebAssembly.)
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: trabahub
+      POSTGRES_PASSWORD: trabahub
+      POSTGRES_DB: trabahub
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trabahub"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgres://trabahub:trabahub@db:5432/trabahub
+      API_URL: http://localhost:4000
+      WEB_URL: http://localhost:3100
+      JWT_SECRET: local-docker-secret-local-docker-secret-1234
+      NODE_ENV: development
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
