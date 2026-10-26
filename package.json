@@ -1,0 +1,14 @@
+{
+  "name": "trabahub",
+  "private": true,
+  "workspaces": ["packages/*", "apps/api", "apps/web"],
+  "scripts": {
+    "dev:api": "npm run dev -w @trabahub/api",
+    "dev:web": "npm run dev -w @trabahub/web",
+    "build": "npm run build -w @trabahub/shared && npm run build -w @trabahub/api && npm run build -w @trabahub/web",
+    "test": "npm test -w @trabahub/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": { "node": ">=22" }
+}
