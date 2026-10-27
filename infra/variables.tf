@@ -60,7 +60,7 @@ variable "neon_region" {
 variable "web_domain" {
   description = "Public URL of the web app, used for CORS and OAuth redirects."
   type        = string
-  default     = "https://trabahub.vercel.app"
+  default     = "https://trabahub-six.vercel.app"
 }
 
 variable "github_oauth_client_id" {

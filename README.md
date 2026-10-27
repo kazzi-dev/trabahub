@@ -7,7 +7,8 @@ TrabaHub is a job-application tracker: save openings, drag them from *Saved* to 
 stack project: a typed REST API, a mobile-first React front end, PostgreSQL, OAuth, Docker,
 Terraform and CI, all on free hosting.
 
-> **Live demo:** _deploying; link coming soon._ The demo button needs no sign-up and gives each
+> **Live demo:** [trabahub-six.vercel.app](https://trabahub-six.vercel.app) · **API docs:** [trabahub-api.onrender.com/docs](https://trabahub-api.onrender.com/docs)
+> The demo button needs no sign-up and gives each
 > visitor their own sandbox.
 
 ## Features

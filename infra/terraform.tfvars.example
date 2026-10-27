@@ -5,7 +5,7 @@ vercel_api_token = "..."
 neon_api_key     = "..."
 
 # Optional
-# web_domain                 = "https://trabahub.vercel.app"
+# web_domain                 = "https://trabahub-six.vercel.app"
 # github_oauth_client_id     = ""
 # github_oauth_client_secret = ""
 # resend_api_key             = "re_..."
